@@ -1,172 +1,370 @@
 /* ========================================
-   WordFlow Content Script Styles
-   划词浮层样式
+   WordFlow v2 Content Script Styles
+   单词采集卡 + 段落翻译卡 + Toast
    ======================================== */
 
-#wordflow-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 2147483646;
-  pointer-events: none;
+/* ====== CSS Variables ====== */
+:root {
+  --wf-accent: #6366F1;
+  --wf-accent-light: #EDF0FF;
+  --wf-green: #1A6B5A;
+  --wf-green-light: #E8F5F0;
+  --wf-surface: #FFFFFF;
+  --wf-surface-alt: #FBF9F5;
+  --wf-text-primary: #27231F;
+  --wf-text-secondary: #5E564B;
+  --wf-text-muted: #7E7568;
+  --wf-border: #E8E3DA;
+  --wf-divider: #F0EDE6;
+  --wf-radius-sm: 10px;
+  --wf-radius-md: 14px;
+  --wf-radius-lg: 18px;
 }
+
+/* ====== Shared Card ====== */
 
 #wordflow-card {
-  position: absolute;
+  position: fixed;
   z-index: 2147483647;
-  width: 320px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 16px 18px;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--wf-surface);
+  border-radius: var(--wf-radius-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
   pointer-events: auto;
-  animation: wordflow-fadeIn 0.2s ease-out;
-  border: 1px solid #f0f0f0;
+  animation: wf-fadeIn 0.22s ease-out;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
 }
 
-@keyframes wordflow-fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+#wordflow-card:active { cursor: grabbing; }
 
-/* 关闭按钮 */
-.wordflow-close {
+#wordflow-card button,
+#wordflow-card select,
+#wordflow-card input { cursor: pointer; user-select: auto; }
+
+#wordflow-card .wf-source-word { cursor: pointer; user-select: auto; }
+
+/* ====== Drag handle hint ====== */
+
+.wf-drag-hint {
   position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  color: #999;
-  font-size: 16px;
-  line-height: 20px;
-  text-align: center;
-  border-radius: 50%;
-  transition: background 0.15s, color 0.15s;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 4px;
+  background: var(--wf-border);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.wordflow-close:hover {
-  background: #f0f0f0;
-  color: #666;
-}
-
-/* 单词标题行 */
-.wordflow-word-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.wordflow-word {
-  font-size: 20px;
-  font-weight: 700;
-  color: #333;
-  line-height: 1.3;
-}
-
-.wordflow-speak {
-  cursor: pointer;
-  font-size: 18px;
-  opacity: 0.6;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
-}
-
-.wordflow-speak:hover {
+#wordflow-card:hover .wf-drag-hint {
   opacity: 1;
 }
 
-/* 音标 */
-.wordflow-phonetic {
-  font-size: 13px;
-  color: #999;
-  margin-bottom: 10px;
-  line-height: 1.4;
+@keyframes wf-fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 释义 */
-.wordflow-definition {
-  font-size: 14px;
-  color: #555;
-  line-height: 1.6;
-  margin-bottom: 14px;
-  word-break: break-word;
+/* ====== Card A: Word Collection (340px) ====== */
+
+#wordflow-card.card-word {
+  width: 340px;
+  padding: 22px 22px 18px;
 }
 
-/* 句子模式 - 原文 */
-.wordflow-sentence-text {
+.wf-word-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.wf-word-text {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--wf-text-primary);
+  letter-spacing: -0.3px;
+}
+
+.wf-phonetic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.wf-phonetic {
   font-size: 14px;
-  color: #333;
-  line-height: 1.6;
-  margin-bottom: 10px;
-  word-break: break-word;
+  color: var(--wf-text-muted);
   font-style: italic;
 }
 
-/* 按钮行 */
-.wordflow-buttons {
+.wf-speaker {
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  color: var(--wf-green);
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+  flex-shrink: 0;
 }
 
-.wordflow-btn {
-  padding: 7px 16px;
-  border-radius: 8px;
+.wf-speaker svg {
+  width: 18px;
+  height: 18px;
+}
+
+.wf-speaker:hover { background: var(--wf-green-light); }
+
+.wf-dict-section {
+  background: var(--wf-surface-alt);
+  border-radius: var(--wf-radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.wf-dict-pos {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wf-accent);
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+.wf-dict-def {
+  font-size: 14px;
+  color: var(--wf-text-secondary);
+  line-height: 1.6;
+}
+
+.wf-divider {
+  height: 1px;
+  background: var(--wf-divider);
+  margin: 14px 0;
+}
+
+.wf-context-section {
+  margin-bottom: 16px;
+}
+
+.wf-context-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wf-text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.wf-context-sentence {
   font-size: 13px;
+  color: var(--wf-text-secondary);
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: var(--wf-green-light);
+  border-radius: var(--wf-radius-sm);
+  border-left: 3px solid var(--wf-green);
+}
+
+.wf-context-sentence .wf-target {
+  font-weight: 700;
+  color: var(--wf-green);
+}
+
+.wf-context-meaning {
+  font-size: 14px;
+  color: var(--wf-text-primary);
+  margin-top: 8px;
+  padding-left: 2px;
+}
+
+.wf-loading {
+  font-size: 13px;
+  color: var(--wf-text-muted);
+  font-style: italic;
+}
+
+.wf-btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.wf-btn {
+  padding: 8px 20px;
+  border-radius: var(--wf-radius-sm);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: background 0.15s, opacity 0.15s;
   font-family: inherit;
+  transition: opacity 0.15s;
 }
 
-.wordflow-btn-cancel {
-  background: #f5f5f5;
-  color: #666;
-  border: 1px solid #e0e0e0;
+.wf-btn:hover { opacity: 0.85; }
+
+.wf-btn-cancel {
+  background: transparent;
+  color: var(--wf-text-muted);
+  border: 1px solid var(--wf-border);
 }
 
-.wordflow-btn-cancel:hover {
-  background: #ebebeb;
-}
-
-.wordflow-btn-save {
-  background: #4A90D9;
+.wf-btn-save {
+  background: var(--wf-accent);
   color: #fff;
 }
 
-.wordflow-btn-save:hover {
-  background: #3d7fc4;
-}
-
-.wordflow-btn-save.disabled {
-  background: #ccc;
-  color: #fff;
+.wf-btn-save.saved,
+.wf-btn-save.disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* 已存入提示 */
-.wordflow-saved-hint {
-  font-size: 12px;
-  color: #4A90D9;
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* ====== Card B: Paragraph Translation (420px) ====== */
+
+#wordflow-card.card-para {
+  width: 420px;
+  padding: 0;
 }
 
-/* Toast 提示 */
+.wf-para-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #FAF8F5;
+  border-bottom: 1px solid var(--wf-divider);
+}
+
+.wf-para-header-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wf-text-muted);
+  letter-spacing: 0.4px;
+}
+
+.wf-para-header-source {
+  font-size: 11px;
+  color: var(--wf-green);
+  font-weight: 500;
+}
+
+.wf-source-section {
+  padding: 16px 18px;
+}
+
+.wf-source-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 4px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--wf-text-primary);
+}
+
+.wf-source-word {
+  padding: 2px 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.wf-source-word:hover {
+  background: var(--wf-accent-light);
+}
+
+.wf-source-word.selected {
+  background: var(--wf-accent-light);
+  font-weight: 700;
+  color: var(--wf-accent);
+}
+
+.wf-thick-divider {
+  height: 1px;
+  background: var(--wf-border);
+  margin: 0 18px;
+}
+
+.wf-translation-section {
+  padding: 16px 18px 20px;
+  min-height: 60px;
+}
+
+.wf-full-translation {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--wf-accent);
+}
+
+.wf-contextual-panel {
+  display: none;
+}
+
+.card-para.word-selected .wf-full-translation {
+  display: none;
+}
+
+.card-para.word-selected .wf-contextual-panel {
+  display: block;
+}
+
+.wf-contextual-dict {
+  font-size: 13px;
+  color: var(--wf-text-secondary);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.wf-contextual-ai {
+  font-size: 14px;
+  color: var(--wf-text-primary);
+  background: var(--wf-green-light);
+  padding: 10px 12px;
+  border-radius: var(--wf-radius-sm);
+  border-left: 3px solid var(--wf-green);
+  font-weight: 500;
+}
+
+.wf-para-footer {
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--wf-divider);
+  background: #FAF8F5;
+}
+
+.wf-save-hint {
+  font-size: 11px;
+  color: var(--wf-green);
+  font-weight: 500;
+  display: none;
+}
+
+.wf-btn-close {
+  font-size: 13px;
+  padding: 6px 16px;
+  border: 1px solid var(--wf-border);
+  border-radius: var(--wf-radius-sm);
+  background: transparent;
+  color: var(--wf-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.wf-footer-hint {
+  font-size: 11px;
+  color: var(--wf-text-muted);
+}
+
+/* ====== Toast ====== */
+
 #wordflow-toast {
   position: fixed;
   top: 20px;
@@ -177,8 +375,8 @@
   padding: 10px 18px;
   border-radius: 8px;
   font-size: 13px;
-  font-family: system-ui, -apple-system, sans-serif;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: wordflow-fadeIn 0.2s ease-out;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", system-ui, sans-serif;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: wf-fadeIn 0.2s ease-out;
   pointer-events: none;
 }

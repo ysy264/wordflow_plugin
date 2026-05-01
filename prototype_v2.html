@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordFlow v2 — 高保真原型</title>
+<style>
+/* ========================================
+   WordFlow v2 Design System
+   兼顾 Android Compose 风格 + 沙拉查词优雅
+   ======================================== */
+
+:root {
+  --accent: #E8752A;
+  --accent-light: #FFF3E8;
+  --accent-dark: #C25D1A;
+  --green: #1A6B5A;
+  --green-light: #E8F5F0;
+  --surface: #FFFFFF;
+  --surface-alt: #FBF9F5;
+  --text-primary: #27231F;
+  --text-secondary: #5E564B;
+  --text-muted: #7E7568;
+  --border: #E8E3DA;
+  --divider: #F0EDE6;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: #F2EFE9;
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+/* ====== Layout ====== */
+
+/* ====== Color Switcher ====== */
+
+.color-switcher {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 10px 12px 8px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.switcher-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.switcher-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.swatch-row {
+  display: flex;
+  gap: 3px;
+}
+
+.color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.color-btn:hover { transform: scale(1.12); z-index: 1; }
+
+.color-btn.active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--text-primary);
+}
+
+@media (max-width: 500px) {
+  .color-switcher {
+    top: 8px;
+    right: 8px;
+    padding: 8px 10px 6px;
+  }
+  .color-btn { width: 24px; height: 24px; border-radius: 5px; }
+}
+
+.prototype-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 900px;
+  width: 100%;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: -16px;
+  padding-left: 4px;
+}
+
+.demo-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ====== Card A: Word Collection ====== */
+
+.word-collect-card {
+  width: 340px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 22px 22px 18px;
+  font-family: var(--font);
+  position: relative;
+}
+
+.word-collect-card .word-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.word-collect-card .word-text {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.word-collect-card .phonetic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.word-collect-card .phonetic {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.word-collect-card .speaker-btn {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.word-collect-card .speaker-btn:hover { background: var(--green-light); }
+
+.word-collect-card .dict-section {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.word-collect-card .dict-pos {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+.word-collect-card .dict-def {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.word-collect-card .divider {
+  height: 1px;
+  background: var(--divider);
+  margin: 14px 0;
+}
+
+.word-collect-card .context-section {
+  margin-bottom: 16px;
+}
+
+.word-collect-card .context-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.word-collect-card .context-sentence {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: var(--green-light);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--green);
+}
+
+.word-collect-card .context-sentence .target {
+  font-weight: 700;
+  color: var(--green);
+}
+
+.word-collect-card .context-meaning {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-top: 8px;
+  padding-left: 2px;
+}
+
+.word-collect-card .btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.word-collect-card .btn {
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-family: var(--font);
+  transition: opacity 0.15s;
+}
+
+.word-collect-card .btn:hover { opacity: 0.85; }
+
+.word-collect-card .btn-cancel {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.word-collect-card .btn-save {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ====== Card B: Paragraph Translation (Saladict inspired) ====== */
+
+.para-translate-card {
+  width: 420px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 0;
+  font-family: var(--font);
+  overflow: hidden;
+}
+
+.para-translate-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #FAF8F5;
+  border-bottom: 1px solid var(--divider);
+}
+
+.para-translate-card .card-header-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+}
+
+.para-translate-card .card-header-source {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.para-translate-card .source-section {
+  padding: 16px 18px;
+}
+
+.para-translate-card .source-text {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 4px;
+}
+
+.para-translate-card .source-word {
+  padding: 2px 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 15px;
+}
+
+.para-translate-card .source-word:hover {
+  background: var(--accent-light);
+}
+
+.para-translate-card .source-word.selected {
+  background: var(--accent-light);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.para-translate-card .thick-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 18px;
+}
+
+.para-translate-card .translation-section {
+  padding: 16px 18px 20px;
+  min-height: 60px;
+}
+
+/* Default state: full translation */
+.para-translate-card .full-translation {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+/* Word-selected state: contextual meaning */
+.para-translate-card .contextual-panel {
+  display: none;
+}
+
+.para-translate-card.word-selected .full-translation {
+  display: none;
+}
+
+.para-translate-card.word-selected .contextual-panel {
+  display: block;
+}
+
+.para-translate-card .contextual-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.para-translate-card .contextual-dict {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.para-translate-card .contextual-ai {
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--green-light);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--green);
+  font-weight: 500;
+}
+
+.para-translate-card .card-footer {
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--divider);
+  background: #FAF8F5;
+}
+
+.para-translate-card .save-hint {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.para-translate-card .btn-close {
+  font-size: 13px;
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+/* ====== Card B variants in a row ====== */
+
+.cards-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ====== Main Popup (380 x 560) ====== */
+
+.popup-frame {
+  width: 380px;
+  height: 560px;
+  background: var(--surface);
+  position: relative;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font);
+}
+
+.popup-frame .popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+
+.popup-frame .popup-logo {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.popup-frame .popup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.popup-frame .icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.popup-frame .icon-btn:hover { background: var(--divider); }
+
+.popup-frame .count-bar {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--divider);
+}
+
+.popup-frame .word-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.popup-frame .word-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #F5F2EC;
+  transition: background 0.12s;
+}
+
+.popup-frame .word-item:hover { background: #FBF9F5; }
+
+.popup-frame .word-item.expanded {
+  background: var(--accent-light);
+}
+
+.popup-frame .word-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-frame .word-item-word {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.popup-frame .word-item.expanded .word-item-word {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.popup-frame .expand-detail {
+  display: none;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.popup-frame .word-item.expanded .expand-detail {
+  display: block;
+}
+
+.popup-frame .expand-phonetic {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.popup-frame .expand-def {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.popup-frame .expand-def .meaning-primary {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.popup-frame .expand-def .meaning-rest {
+  color: var(--text-muted);
+}
+
+.popup-frame .expand-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.popup-frame .expand-actions button {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font);
+  color: var(--text-secondary);
+}
+
+.popup-frame .popup-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--divider);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.popup-frame .popup-footer button {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font);
+  border: none;
+}
+
+.popup-frame .btn-export {
+  background: var(--accent);
+  color: #fff;
+}
+
+.popup-frame .btn-sync {
+  background: transparent;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary);
+}
+
+/* ====== Settings Panel ====== */
+
+.settings-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+
+.settings-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.settings-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.setting-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.setting-select {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  cursor: pointer;
+}
+
+.setting-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 500;
+}
+
+.setting-btn.danger {
+  color: #DC2626;
+  border-color: #FECACA;
+  background: #FFF5F5;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.toggle-switch input { display: none; }
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: #E0DCD5;
+  border-radius: 13px;
+  transition: background 0.2s;
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: var(--accent);
+}
+
+.toggle-switch input:checked + .toggle-track::after {
+  transform: translateX(18px);
+}
+
+.setting-divider {
+  height: 1px;
+  background: var(--divider);
+  margin: 4px 16px;
+}
+
+.setting-footer {
+  padding: 16px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.settings-gear {
+  font-size: 16px;
+}
+
+/* ====== Toast ====== */
+
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: var(--font);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 999;
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+/* ====== Responsive ====== */
+
+@media (max-width: 500px) {
+  .word-collect-card { width: 100%; }
+  .para-translate-card { width: 100%; }
+  .popup-frame { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Color Switcher -->
+<div class="color-switcher" id="colorSwitcher">
+  <div class="switcher-label">ACCENT</div>
+  <div class="switcher-rows" id="switcherRows"></div>
+</div>
+
+<div class="prototype-container">
+
+  <div class="section-title">卡片 A · 单词采集（双击/划词单个单词）</div>
+  <div class="demo-row">
+    <!-- Word Collection Card -->
+    <div class="word-collect-card">
+      <div class="word-row">
+        <span class="word-text">collaborated</span>
+      </div>
+      <div class="phonetic-row">
+        <span class="phonetic">/kəˈlæbəreɪtɪd/</span>
+        <svg class="speaker-btn" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" onclick="showToast('🔊 发音播放中')">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.5v7a4.47 4.47 0 0 0 2.5-3.5zM14 3.23v2.06a7.007 7.007 0 0 1 0 13.42v2.06A9.01 9.01 0 0 0 14 3.23z"/>
+        </svg>
+      </div>
+
+      <div class="dict-section">
+        <div class="dict-pos">v. 合作，协作</div>
+        <div class="dict-def">1. 合作，协作，配合<br>2. 通敌，勾结敌人</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="context-section">
+        <div class="context-label">✦ 语境释义</div>
+        <div class="context-sentence">
+          "The two companies <span class="target">collaborated</span> on the project."
+        </div>
+        <div class="context-meaning">此处意为<strong>"合作"</strong>——两家公司在这个项目上展开协作，不含贬义。</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-cancel" onclick="showToast('已关闭')">取消</button>
+        <button class="btn btn-save" onclick="showToast('✓ 已存入词展')">存入词展</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">卡片 B · 段落翻译（选中段落触发）</div>
+  <div class="cards-row">
+    <!-- Translation Card: Default state (full translation) -->
+    <div class="para-translate-card" id="transCard1">
+      <div class="card-header">
+        <span class="card-header-label">段落翻译</span>
+        <span class="card-header-source">deepseek</span>
+      </div>
+
+      <div class="source-section">
+        <div class="source-text" id="sourceText1">
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'collaborated', '/kəˈlæbəreɪtɪd/', 'v. 合作，协作；通敌', '此处意为"合作"——两家公司在这个项目上展开协作，不含贬义。')">Collaborated</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'on', '', '', '')">on</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'a', '', '', '')">a</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'project', '/ˈprɒdʒekt/', 'n. 项目，工程，计划', '此处意为"项目"——指两家公司合作的具体商业项目。')">project</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'with', '', '', '')">with</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'local', '', '', '')">local</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'partners', '', '', '')">partners</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'across', '', '', '')">across</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'the', '', '', '')">the</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', 'country', '', '', '')">country</span>
+          <span class="source-word" onclick="selectWord(this, 'transCard1', '.', '', '', '')">.</span>
+        </div>
+      </div>
+
+      <div class="thick-divider"></div>
+
+      <div class="translation-section">
+        <div class="full-translation">
+          两家公司与全国各地的本地合作伙伴在项目上展开了合作。
+        </div>
+        <div class="contextual-panel">
+          <div class="contextual-label">✦ 语境释义 — <strong id="selectedWord1"></strong></div>
+          <div class="contextual-dict" id="dictDef1"></div>
+          <div class="contextual-ai" id="aiMeaning1"></div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="save-hint" id="saveHint1" style="display:none">已自动存入词展</span>
+        <span style="font-size:11px;color:var(--text-muted)">点击上方单词查看语境释义</span>
+        <button class="btn-close" onclick="showToast('已关闭')">关闭</button>
+      </div>
+    </div>
+
+    <!-- Translation Card: Word selected state (static preview) -->
+    <div class="para-translate-card word-selected" style="align-self:flex-start">
+      <div class="card-header">
+        <span class="card-header-label">段落翻译</span>
+        <span class="card-header-source">deepseek</span>
+      </div>
+
+      <div class="source-section">
+        <div class="source-text">
+          <span class="source-word selected">Collaborated</span>
+          <span class="source-word" style="cursor:default">on</span>
+          <span class="source-word" style="cursor:default">a</span>
+          <span class="source-word" style="cursor:default">project</span>
+          <span class="source-word" style="cursor:default">with</span>
+          <span class="source-word" style="cursor:default">local</span>
+          <span class="source-word" style="cursor:default">partners.</span>
+        </div>
+      </div>
+
+      <div class="thick-divider"></div>
+
+      <div class="translation-section">
+        <div class="full-translation" style="display:none"></div>
+        <div class="contextual-panel">
+          <div class="contextual-label">✦ 语境释义 — <strong>collaborated</strong></div>
+          <div class="contextual-dict">v. 合作，协作；通敌</div>
+          <div class="contextual-ai">此处意为<strong>"合作"</strong>——两家公司在这个项目上展开协作，不含贬义。</div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="save-hint">已自动存入词展</span>
+        <span style="font-size:11px;color:var(--text-muted)">点击其他单词切换</span>
+        <button class="btn-close" onclick="showToast('已关闭')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">主界面 · Popup 弹窗（380×560px，参考手机端词展）</div>
+  <div style="display:flex;justify-content:center">
+    <div class="popup-frame">
+      <div class="popup-header">
+        <span class="popup-logo">WordFlow</span>
+        <div class="popup-actions">
+          <button class="icon-btn" title="搜索" onclick="showToast('搜索')">🔍</button>
+          <button class="icon-btn" title="排序" onclick="showToast('排序切换')">⇅</button>
+          <button class="icon-btn settings-gear" title="设置" onclick="toggleSettings()">⚙</button>
+        </div>
+      </div>
+
+      <!-- Settings Panel (overlay) -->
+      <div class="settings-overlay" id="settingsOverlay" style="display:none">
+        <div class="settings-header">
+          <span class="settings-title">设置</span>
+          <button class="icon-btn" onclick="toggleSettings()">✕</button>
+        </div>
+        <div class="settings-body">
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">划词模式</div>
+              <div class="setting-desc">选中即弹</div>
+            </div>
+            <select class="setting-select">
+              <option>选中即弹</option>
+              <option>关闭划词</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">自动发音</div>
+              <div class="setting-desc">查词成功后自动播放</div>
+            </div>
+            <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">主题外观</div>
+              <div class="setting-desc">明亮 / 深邃 / 极夜</div>
+            </div>
+            <select class="setting-select">
+              <option>明亮</option>
+              <option>深邃</option>
+              <option>极夜</option>
+            </select>
+          </div>
+          <div class="setting-divider"></div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">坚果云同步</div>
+              <div class="setting-desc">WebDAV 跨设备同步</div>
+            </div>
+            <button class="setting-btn" onclick="showToast('同步已触发')">同步</button>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">清空复习进度</div>
+              <div class="setting-desc">重置所有 SM-2 复习状态</div>
+            </div>
+            <button class="setting-btn danger" onclick="showToast('已清空复习进度')">清空</button>
+          </div>
+          <div class="setting-divider"></div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">导出格式</div>
+            </div>
+            <select class="setting-select">
+              <option>TXT（不背单词）</option>
+              <option>CSV</option>
+              <option>墨墨</option>
+              <option>Anki</option>
+            </select>
+          </div>
+          <div class="setting-footer">
+            <span>WordFlow v1.0.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="count-bar">▌ 47 词</div>
+
+      <div class="word-list">
+        <div class="word-item" onclick="toggleExpand(this)">
+          <div class="word-item-header">
+            <span class="word-item-word">collaborated</span>
+          </div>
+          <div class="expand-detail">
+            <div class="expand-phonetic">/kəˈlæbəreɪtɪd/</div>
+            <div class="expand-def">
+              <span class="meaning-primary">v. 合作，协作</span><br>
+              <span class="meaning-rest">通敌，勾结敌人</span>
+            </div>
+            <div class="expand-actions">
+              <button>🔊 发音</button>
+              <button>📋 复制</button>
+              <button>🗑 删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="word-item" onclick="toggleExpand(this)">
+          <div class="word-item-header">
+            <span class="word-item-word">ephemeral</span>
+          </div>
+          <div class="expand-detail">
+            <div class="expand-phonetic">/ɪˈfemərəl/</div>
+            <div class="expand-def">
+              <span class="meaning-primary">adj. 短暂的，转瞬即逝的</span><br>
+              <span class="meaning-rest">朝生暮死的</span>
+            </div>
+            <div class="expand-actions">
+              <button>🔊 发音</button>
+              <button>📋 复制</button>
+              <button>🗑 删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="word-item" onclick="toggleExpand(this)">
+          <div class="word-item-header">
+            <span class="word-item-word">serendipity</span>
+          </div>
+          <div class="expand-detail">
+            <div class="expand-phonetic">/ˌserənˈdɪpəti/</div>
+            <div class="expand-def">
+              <span class="meaning-primary">n. 意外发现，机缘巧合</span>
+            </div>
+            <div class="expand-actions">
+              <button>🔊 发音</button>
+              <button>📋 复制</button>
+              <button>🗑 删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="word-item" onclick="toggleExpand(this)">
+          <div class="word-item-header">
+            <span class="word-item-word">juxtaposition</span>
+          </div>
+          <div class="expand-detail">
+            <div class="expand-phonetic">/ˌdʒʌkstəpəˈzɪʃn/</div>
+            <div class="expand-def">
+              <span class="meaning-primary">n. 并置，并列</span>
+            </div>
+            <div class="expand-actions">
+              <button>🔊 发音</button>
+              <button>📋 复制</button>
+              <button>🗑 删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="word-item" onclick="toggleExpand(this)">
+          <div class="word-item-header">
+            <span class="word-item-word">ubiquitous</span>
+          </div>
+          <div class="expand-detail">
+            <div class="expand-phonetic">/juːˈbɪkwɪtəs/</div>
+            <div class="expand-def">
+              <span class="meaning-primary">adj. 无处不在的</span>
+            </div>
+            <div class="expand-actions">
+              <button>🔊 发音</button>
+              <button>📋 复制</button>
+              <button>🗑 删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="word-item" onclick="toggleExpand(this)">
+          <div class="word-item-header">
+            <span class="word-item-word">pragmatic</span>
+          </div>
+          <div class="expand-detail">
+            <div class="expand-phonetic">/præɡˈmætɪk/</div>
+            <div class="expand-def">
+              <span class="meaning-primary">adj. 务实的，实用主义的</span>
+            </div>
+            <div class="expand-actions">
+              <button>🔊 发音</button>
+              <button>📋 复制</button>
+              <button>🗑 删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-footer">
+        <button class="btn-sync">🔄 同步</button>
+        <button class="btn-export">导出</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== Color Palette ======
+// Each family: 4 adjacent shades (light → dark) + accent-light + accent-dark
+
+const PALETTES = [
+  {
+    name: '紫罗兰',
+    shades: [
+      { hex: '#A78BFA', light: '#F5F3FF', dark: '#5B21B6' },
+      { hex: '#8B5CF6', light: '#F3F0FF', dark: '#4C1D95' },
+      { hex: '#7C3AED', light: '#EDE9FE', dark: '#3E1678' },
+      { hex: '#6D28D9', light: '#EBE4FF', dark: '#2F0E5C' }
+    ]
+  },
+  {
+    name: '蓝紫',
+    shades: [
+      { hex: '#93A3F0', light: '#F0F2FF', dark: '#3730A3' },
+      { hex: '#7C8AEB', light: '#EDEFFF', dark: '#2E2680' },
+      { hex: '#6571E0', light: '#E8EAFF', dark: '#251D6A' },
+      { hex: '#4D58C4', light: '#E2E5FF', dark: '#1C1452' }
+    ]
+  },
+  {
+    name: '靛蓝',
+    shades: [
+      { hex: '#818CF8', light: '#EEF2FF', dark: '#3730A3' },
+      { hex: '#6366F1', light: '#EDF0FF', dark: '#312E81' },
+      { hex: '#4F46E5', light: '#ECEEFF', dark: '#2E2680' },
+      { hex: '#4338CA', light: '#E8E9FF', dark: '#241F6A' }
+    ]
+  },
+  {
+    name: '暖橙',
+    shades: [
+      { hex: '#F59E4B', light: '#FFF7ED', dark: '#C2410C' },
+      { hex: '#EA8A3D', light: '#FFF4EB', dark: '#BF4910' },
+      { hex: '#E8752A', light: '#FFF3E8', dark: '#C25D1A' },
+      { hex: '#D4641A', light: '#FFF1E3', dark: '#A34E13' }
+    ]
+  },
+  {
+    name: '珊瑚',
+    shades: [
+      { hex: '#FF8A7A', light: '#FFF5F3', dark: '#C0392B' },
+      { hex: '#F07462', light: '#FFF3F1', dark: '#A93226' },
+      { hex: '#E8593A', light: '#FFF1EE', dark: '#922B21' },
+      { hex: '#D94A2E', light: '#FFEEEA', dark: '#7B241C' }
+    ]
+  },
+  {
+    name: '玫红',
+    shades: [
+      { hex: '#FB7185', light: '#FFF1F2', dark: '#9F1239' },
+      { hex: '#F43F5E', light: '#FFF0F1', dark: '#8B0E2F' },
+      { hex: '#E11D48', light: '#FFEEF0', dark: '#7C0A2A' },
+      { hex: '#BE123C', light: '#FFEBED', dark: '#660622' }
+    ]
+  },
+  {
+    name: '绯红',
+    shades: [
+      { hex: '#F87171', light: '#FFF0F0', dark: '#991B1B' },
+      { hex: '#EF4444', light: '#FFEDED', dark: '#7F1D1D' },
+      { hex: '#DC2626', light: '#FFEBEB', dark: '#6B1414' },
+      { hex: '#B91C1C', light: '#FFE6E6', dark: '#530C0C' }
+    ]
+  },
+  {
+    name: '砖红',
+    shades: [
+      { hex: '#D4846A', light: '#FFF4F0', dark: '#7A3B2A' },
+      { hex: '#C26A4A', light: '#FFF1EC', dark: '#6B3120' },
+      { hex: '#B0553A', light: '#FFEDE7', dark: '#5A2618' },
+      { hex: '#94422A', light: '#FFE9E1', dark: '#4A1E12' }
+    ]
+  },
+  {
+    name: '赭色',
+    shades: [
+      { hex: '#D4946A', light: '#FFF6F0', dark: '#7A4A2A' },
+      { hex: '#C27A4A', light: '#FFF2EA', dark: '#6B3A20' },
+      { hex: '#A8653A', light: '#FFEDE2', dark: '#5A2E18' },
+      { hex: '#8B502A', light: '#FFE7D8', dark: '#4A2210' }
+    ]
+  },
+  {
+    name: '梅子',
+    shades: [
+      { hex: '#C08497', light: '#FFF5F8', dark: '#6B3A4A' },
+      { hex: '#A8607A', light: '#FFF0F4', dark: '#5A2E3A' },
+      { hex: '#8B3A5E', light: '#FFEBF0', dark: '#4A1E2E' },
+      { hex: '#722246', light: '#FFE4EC', dark: '#3A1222' }
+    ]
+  },
+  {
+    name: '琥珀',
+    shades: [
+      { hex: '#FBBF24', light: '#FFFDF5', dark: '#A16207' },
+      { hex: '#F59E0B', light: '#FFFCF0', dark: '#8B5006' },
+      { hex: '#D97706', light: '#FFFBEB', dark: '#783E04' },
+      { hex: '#B45309', light: '#FFF9E3', dark: '#5E2F02' }
+    ]
+  }
+];
+
+// Default: 暖橙 row 2 (index 2) = #E8752A
+let activePalette = 2; // 靛蓝
+let activeShade = 1;  // shade 2 = #6366F1
+
+function renderSwatches() {
+  const rows = document.getElementById('switcherRows');
+  rows.innerHTML = '';
+
+  PALETTES.forEach((pal, pi) => {
+    const row = document.createElement('div');
+    row.className = 'swatch-row';
+
+    pal.shades.forEach((shade, si) => {
+      const btn = document.createElement('button');
+      btn.className = 'color-btn';
+      if (pi === activePalette && si === activeShade) btn.classList.add('active');
+      btn.style.background = shade.hex;
+      btn.title = `${pal.name} ${si + 1}`;
+      btn.addEventListener('click', () => {
+        applyColor(pi, si);
+      });
+      row.appendChild(btn);
+    });
+
+    rows.appendChild(row);
+  });
+}
+
+function applyColor(pi, si) {
+  activePalette = pi;
+  activeShade = si;
+  const shade = PALETTES[pi].shades[si];
+  const root = document.documentElement;
+  root.style.setProperty('--accent', shade.hex);
+  root.style.setProperty('--accent-light', shade.light);
+  root.style.setProperty('--accent-dark', shade.dark);
+  renderSwatches();
+}
+
+// Init
+renderSwatches();
+
+// ====== Settings ======
+
+function toggleSettings() {
+  const overlay = document.getElementById('settingsOverlay');
+  overlay.style.display = overlay.style.display === 'none' ? 'flex' : 'none';
+}
+
+// ====== Toast ======
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+function toggleExpand(el) {
+  const wasExpanded = el.classList.contains('expanded');
+  // collapse all
+  document.querySelectorAll('.popup-frame .word-item').forEach(w => w.classList.remove('expanded'));
+  if (!wasExpanded) el.classList.add('expanded');
+}
+
+function selectWord(el, cardId, word, phonetic, dictDef, aiMeaning) {
+  // Deselect all words in this card
+  const card = document.getElementById(cardId);
+  card.querySelectorAll('.source-word').forEach(w => w.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // Switch to contextual panel
+  card.classList.add('word-selected');
+
+  // Update content
+  document.getElementById('selectedWord1') ? null : (card.querySelector('.contextual-label strong').textContent = word);
+  // Find the right elements
+  const label = card.querySelector('.contextual-label strong');
+  if (label) label.textContent = word;
+  const dictEl = card.querySelector('.contextual-dict');
+  if (dictEl) dictEl.textContent = dictDef;
+  const aiEl = card.querySelector('.contextual-ai');
+  if (aiEl) aiEl.innerHTML = aiMeaning;
+
+  const hint = card.querySelector('.save-hint');
+  if (hint) {
+    hint.style.display = 'block';
+    hint.textContent = word + ' 已自动存入词展';
+  }
+
+  showToast(word + ' 已自动存入词展（语境释义已关联）');
+}
+</script>
+
+</body>
+</html>

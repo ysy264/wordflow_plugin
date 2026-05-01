@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WordFlow",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "轻量英文生词 & 句子采集器",
   "permissions": [
     "storage",
@@ -11,7 +11,9 @@
   ],
   "host_permissions": [
     "https://dict.youdao.com/*",
-    "https://dav.jianguoyun.com/*"
+    "https://dav.jianguoyun.com/*",
+    "https://api.deepseek.com/*",
+    "https://translate.googleapis.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
