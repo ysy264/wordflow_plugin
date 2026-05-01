@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WordFlow Icon Generator</title>
+  <style>
+    body { font-family: system-ui; padding: 40px; text-align: center; }
+    canvas { border: 1px solid #eee; margin: 10px; }
+    .info { color: #666; margin: 20px 0; }
+    button { padding: 12px 32px; font-size: 16px; background: #4A90D9; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #3d7fc4; }
+    .done { color: #27ae60; font-weight: bold; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>WordFlow Icon Generator</h1>
+  <p class="info">Click the button to generate and download icon files.<br>Then move them to the <code>assets/</code> folder.</p>
+  <div id="canvases"></div>
+  <br>
+  <button onclick="generateAll()">Generate & Download All Icons</button>
+  <div id="status"></div>
+
+  <script>
+    const sizes = [16, 48, 128];
+
+    function drawIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Background: rounded rectangle
+      const radius = size * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fillStyle = '#4A90D9';
+      ctx.fill();
+
+      // Letter "W"
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `bold ${size * 0.55}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText('W', size / 2, size / 2 + size * 0.03);
+
+      // Show on page
+      document.getElementById('canvases').appendChild(canvas);
+      const label = document.createElement('span');
+      label.textContent = ` ${size}x${size} `;
+      document.getElementById('canvases').appendChild(label);
+
+      return canvas;
+    }
+
+    function downloadCanvas(canvas, filename) {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function generateAll() {
+      document.getElementById('canvases').innerHTML = '';
+
+      sizes.forEach((size, i) => {
+        setTimeout(() => {
+          const canvas = drawIcon(size);
+          downloadCanvas(canvas, `icon${size}.png`);
+          if (i === sizes.length - 1) {
+            document.getElementById('status').innerHTML =
+              '<p class="done">All 3 icons downloaded!</p>' +
+              '<p class="info">Move icon16.png, icon48.png, icon128.png to the <code>assets/</code> folder.</p>';
+          }
+        }, i * 500); // stagger downloads
+      });
+    }
+  </script>
+</body>
+</html>

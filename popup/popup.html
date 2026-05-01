@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=380">
+  <link rel="stylesheet" href="popup.css">
+  <title>WordFlow</title>
+</head>
+<body>
+  <!-- ====== 顶部栏 ====== -->
+  <header id="header">
+    <div class="header-left">
+      <span class="logo">W</span>
+      <span class="title">WordFlow</span>
+    </div>
+    <div class="header-right">
+      <span class="icon-btn" id="btn-search" title="搜索">🔍</span>
+      <span class="icon-btn" id="btn-settings" title="设置">⚙️</span>
+    </div>
+  </header>
+
+  <!-- ====== 搜索栏（默认隐藏） ====== -->
+  <div id="search-bar" class="hidden">
+    <input type="text" id="search-input" placeholder="搜索单词或句子...">
+    <span id="search-cancel">取消</span>
+  </div>
+
+  <!-- ====== Tab 切换 ====== -->
+  <div id="tabs">
+    <div class="tab active" data-tab="words">
+      单词 <span id="word-count">0</span>
+    </div>
+    <div class="tab" data-tab="sentences">
+      句词 <span id="sentence-count">0</span>
+    </div>
+  </div>
+
+  <!-- ====== 单词列表 ====== -->
+  <div id="words-panel" class="panel active">
+    <div id="words-list" class="list"></div>
+    <div id="words-empty" class="empty-state hidden">
+      <p>选中网页中的英文单词</p>
+      <p>即可存入词池</p>
+    </div>
+  </div>
+
+  <!-- ====== 句词列表 ====== -->
+  <div id="sentences-panel" class="panel">
+    <div id="sentences-list" class="list"></div>
+    <div id="sentences-empty" class="empty-state hidden">
+      <p>选中网页中的英文句子</p>
+      <p>即可存入句池</p>
+    </div>
+  </div>
+
+  <!-- ====== 底部导出按钮 ====== -->
+  <footer id="footer">
+    <button id="btn-export" class="export-btn">📤 导出</button>
+  </footer>
+
+  <!-- ====== 设置页（默认隐藏） ====== -->
+  <div id="settings-page" class="page hidden">
+    <header class="sub-header">
+      <span id="settings-back" class="back-btn">← 返回</span>
+      <span class="sub-title">设置</span>
+    </header>
+    <div class="settings-content">
+      <div class="setting-item">
+        <div class="setting-label">⚡ 划词模式</div>
+        <div class="setting-options">
+          <label><input type="radio" name="selectionMode" value="auto" checked> 选中即弹</label>
+          <label><input type="radio" name="selectionMode" value="disabled"> 关闭划词</label>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">🔊 自动发音</div>
+        <div class="setting-desc">弹出浮层时自动播放发音</div>
+        <label class="toggle">
+          <input type="checkbox" id="auto-speak">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-item" style="flex-direction:column; align-items:stretch;">
+        <div class="setting-label">☁️ 坚果云同步</div>
+        <div class="setting-desc" style="margin-bottom:6px;">通过 WebDAV 在电脑和手机间同步词池</div>
+        <input type="text" id="webdav-user" class="setting-input" placeholder="坚果云账号（邮箱）">
+        <input type="password" id="webdav-pass" class="setting-input" placeholder="应用密码（非登录密码）">
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <button class="sync-btn" id="btn-test-webdav">测试连接</button>
+          <button class="sync-btn sync-btn-primary" id="btn-sync-now">立即同步</button>
+        </div>
+        <div id="sync-status" class="sync-status"></div>
+        <div class="setting-desc" style="margin-top:4px; font-size:11px; color:#bbb;">
+          应用密码在坚果云网页版 → 账户信息 → 安全选项 → 第三方应用管理 中生成
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">📊 统计</div>
+        <div class="setting-desc" id="stats-text">累计 0 词 · 0 句</div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">ℹ️ 关于</div>
+        <div class="setting-desc">WordFlow v1.0.0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 导出面板（默认隐藏） ====== -->
+  <div id="export-page" class="page hidden">
+    <header class="sub-header">
+      <span id="export-back" class="back-btn">← 返回</span>
+      <span class="sub-title">导出到…</span>
+    </header>
+    <div class="export-info" id="export-info"></div>
+    <div class="export-list">
+      <div class="export-item" data-target="bubei">
+        <span class="export-icon">📗</span>
+        <div class="export-text">
+          <div class="export-name">不背单词</div>
+          <div class="export-desc">每行一词，上传至 bbdc.cn</div>
+        </div>
+      </div>
+      <div class="export-item" data-target="momo">
+        <span class="export-icon">📘</span>
+        <div class="export-text">
+          <div class="export-name">墨墨背单词</div>
+          <div class="export-desc">含释义（单词##释义）</div>
+        </div>
+      </div>
+      <div class="export-item" data-target="anki">
+        <span class="export-icon">📙</span>
+        <div class="export-text">
+          <div class="export-name">Anki</div>
+          <div class="export-desc">Tab 分隔，含音标和释义</div>
+        </div>
+      </div>
+      <div class="export-item" data-target="quizlet">
+        <span class="export-icon">📕</span>
+        <div class="export-text">
+          <div class="export-name">Quizlet</div>
+          <div class="export-desc">Tab 分隔词表</div>
+        </div>
+      </div>
+      <div class="export-item" data-target="txt">
+        <span class="export-icon">📄</span>
+        <div class="export-text">
+          <div class="export-name">通用 TXT</div>
+          <div class="export-desc">每行一词/句</div>
+        </div>
+      </div>
+      <div class="export-item" data-target="csv">
+        <span class="export-icon">📊</span>
+        <div class="export-text">
+          <div class="export-name">通用 CSV</div>
+          <div class="export-desc">含音标和释义</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 导出成功引导（默认隐藏） ====== -->
+  <div id="export-guide-page" class="page hidden">
+    <header class="sub-header">
+      <span id="guide-back" class="back-btn">← 返回</span>
+      <span class="sub-title">导出成功</span>
+    </header>
+    <div class="guide-content" id="guide-content"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
