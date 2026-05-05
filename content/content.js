@@ -64,71 +64,48 @@
     const sel = window.getSelection();
     if (!sel.rangeCount) return '';
     const range = sel.getRangeAt(0);
-
-    const selectedText = sel.toString().trim().toLowerCase();
+    const selectedText = sel.toString().trim();
     if (!selectedText) return '';
 
-    // Get the parent block text
-    const fullText = getParentText(range);
-    if (!fullText) return '';
-
-    // Split by sentence boundaries, keep delimiters
-    const sentences = splitSentences(fullText);
-    if (sentences.length <= 1) {
-      // No sentence boundaries found, return truncated whole
-      return fullText.length < 500 ? fullText : truncateAroundWord(fullText, selectedText, 80);
-    }
-
-    // Find the sentence containing the selected word
-    let idx = -1;
-    for (let i = 0; i < sentences.length; i++) {
-      if (sentences[i].toLowerCase().includes(selectedText)) {
-        idx = i;
-        break;
-      }
-    }
-    if (idx === -1) {
-      // Not found, return first few sentences
-      return sentences.slice(0, 3).join('');
-    }
-
-    const target = sentences[idx].trim();
-    // If the sentence is long enough, return it directly
-    if (target.length > 40) return target;
-
-    // Too short, expand to include adjacent sentences
-    let result = target;
-    // Add previous sentence
-    if (idx > 0) result = sentences[idx - 1].trim() + ' ' + result;
-    // Add next sentence if still short
-    if (result.length < 80 && idx + 1 < sentences.length) {
-      result = result + ' ' + sentences[idx + 1].trim();
-    }
-    return result.trim();
-  }
-
-  function getParentText(range) {
+    // Walk up DOM to get the parent text block
     let node = range.commonAncestorContainer;
+    let fullText = '';
     for (let i = 0; i < 5; i++) {
       if (!node || node === document.body) break;
       const text = (node.textContent || '').trim();
-      if (text.length > 10 && text.length < 1500) return text;
+      if (text.length > 10 && text.length < 1500) { fullText = text; break; }
       if (node.parentElement) node = node.parentElement;
     }
-    // Fallback
-    const parent = range.commonAncestorContainer?.parentElement;
-    return parent?.textContent?.trim().substring(0, 1500) || '';
-  }
-
-  function splitSentences(text) {
-    try {
-      const parts = text.split(/(?<=[.!?])(?=\s+[A-Z\u4E00-\u9FFF])/g);
-      if (parts.length > 1) return parts;
-      // Try simpler split
-      return text.split(/(?<=[.!?])\s+/);
-    } catch (e) {
-      return [text];
+    if (!fullText) {
+      const parent = range.commonAncestorContainer?.parentElement;
+      if (parent?.textContent) fullText = parent.textContent.trim().substring(0, 1500);
     }
+    if (!fullText) return '';
+
+    // Split by sentence-ending punctuation
+    const sentences = fullText.split(/[.?!]\s+/);
+    if (sentences.length <= 1) {
+      return fullText.length < 400 ? fullText : truncateAroundWord(fullText, selectedText, 80);
+    }
+
+    // Find the sentence containing the selected word
+    const targetLower = selectedText.toLowerCase();
+    let idx = -1;
+    for (let i = 0; i < sentences.length; i++) {
+      if (sentences[i].toLowerCase().includes(targetLower)) { idx = i; break; }
+    }
+    if (idx === -1) return sentences.slice(0, 3).join('. ');
+
+    const target = sentences[idx].trim();
+    if (target.length > 40) return target;
+
+    // Too short: expand to adjacent sentences
+    let result = target;
+    if (idx > 0) result = sentences[idx - 1].trim() + '. ' + result;
+    if (result.length < 80 && idx + 1 < sentences.length) {
+      result = result + '. ' + sentences[idx + 1].trim();
+    }
+    return result.trim();
   }
 
   // ========== 3. Card A: Word Collection ==========
