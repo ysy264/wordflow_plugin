@@ -121,21 +121,22 @@
   }
 
   function splitSentences(text) {
-    // Split on ., !, ? followed by space or end, but keep the delimiter
-    // Avoid splitting on "Mr." "U.S." "e.g." etc.
-    const parts = text.split(/(?<=[.!?])(?=\s+[A-Z\u4E00-\u9FFF])/g);
-    if (parts.length <= 1) {
+    try {
+      const parts = text.split(/(?<=[.!?])(?=\s+[A-Z\u4E00-\u9FFF])/g);
+      if (parts.length > 1) return parts;
       // Try simpler split
       return text.split(/(?<=[.!?])\s+/);
+    } catch (e) {
+      return [text];
     }
-    return parts;
   }
 
   // ========== 3. Card A: Word Collection ==========
 
   function showWordCard(word, rect) {
     removeCard();
-    const sentence = getParentSentence();
+    let sentence = '';
+    try { sentence = getParentSentence(); } catch (e) {}
 
     const card = document.createElement('div');
     card.id = 'wordflow-card';
@@ -227,7 +228,8 @@
     btn.textContent = '保存中...';
     btn.classList.add('disabled');
 
-    const sentence = getParentSentence();
+    let sentence = '';
+    try { sentence = getParentSentence(); } catch (e) {}
     const context = sentence ? {
       text: sentence,
       source: window.location.href,
