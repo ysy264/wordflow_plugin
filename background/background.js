@@ -3,6 +3,9 @@
 // 右键菜单 + 有道词典 + DeepSeek AI + 数据存储 + WebDAV 同步
 // ========================================
 
+self.addEventListener('error', e => console.error('WordFlow SW error:', e));
+self.addEventListener('unhandledrejection', e => console.error('WordFlow SW rejection:', e.reason));
+
 // ---------- 0. DeepSeek Client ----------
 
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1/chat/completions';
