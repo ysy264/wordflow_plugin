@@ -68,6 +68,17 @@
       renderList();
     });
 
+    // Quick toggle
+    $('#toggle-enabled').addEventListener('change', () => {
+      const enabled = $('#toggle-enabled').checked;
+      const mode = enabled ? 'auto' : 'disabled';
+      chrome.storage.local.set({ selectionMode: mode });
+      $('#toggle-status-text').textContent = enabled ? '开' : '关';
+      $('#toggle-status-text').className = 'toggle-status ' + (enabled ? 'on' : 'off');
+      // Also sync the settings panel
+      $('#sel-mode').value = mode;
+    });
+
     $('#btn-settings').addEventListener('click', () => {
       loadSettings();
       $('#settings-overlay').classList.remove('hidden');
@@ -244,6 +255,13 @@
     });
 
     $('#sel-mode').value = data.selectionMode;
+
+    // Sync quick toggle
+    const enabled = data.selectionMode !== 'disabled';
+    $('#toggle-enabled').checked = enabled;
+    $('#toggle-status-text').textContent = enabled ? '开' : '关';
+    $('#toggle-status-text').className = 'toggle-status ' + (enabled ? 'on' : 'off');
+
     $('#auto-speak').checked = data.autoSpeak;
     $('#deepseek-key').value = data.deepseekKey;
     $('#webdav-user').value = data.webdavUser;

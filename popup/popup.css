@@ -111,6 +111,33 @@ body {
   font-family: var(--font);
 }
 
+/* ====== Quick Toggle ====== */
+
+#quick-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toggle-status {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 20px;
+}
+
+.toggle-status.on { color: var(--accent); }
+.toggle-status.off { color: var(--text-muted); }
+
 /* ====== Count Bar ====== */
 
 #count-bar {
